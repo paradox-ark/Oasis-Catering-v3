@@ -1,259 +1,688 @@
-/* Oasis — shared interactions + menu data (no auth, no backend) */
-(function(){
+/* ============================================================
+   OASIS CATERING & EVENT MANAGEMENT — Master Interactions & Menu Engine
+   ============================================================ */
+(function() {
   "use strict";
-  const $=(s,c=document)=>c.querySelector(s), $$=(s,c=document)=>[...c.querySelectorAll(s)];
 
-  /* ---------- header / drawer ---------- */
-  const header=$(".site-header");
-  addEventListener("scroll",()=>{
-    header&&header.classList.toggle("scrolled",scrollY>10);
-    const t=$("#fabTop"); if(t) t.style.display=scrollY>700?"grid":"none";
-  },{passive:true});
-  const drawer=$("#drawer");
-  $$("[data-open-drawer]").forEach(b=>b.addEventListener("click",()=>drawer&&drawer.classList.add("open")));
-  $$("[data-close-drawer]").forEach(b=>b.addEventListener("click",()=>drawer&&drawer.classList.remove("open")));
+  const $ = (selector, context = document) => context.querySelector(selector);
+  const $$ = (selector, context = document) => [...context.querySelectorAll(selector)];
 
-  /* fabs stay off the hero on phones — appear once you scroll past it */
-  const fabs=$(".fab-stack"), hero=$(".hero");
-  if(fabs&&hero&&matchMedia("(max-width:560px)").matches){
-    const setH=()=>document.body.classList.toggle("on-hero",scrollY<hero.offsetHeight-120);
-    setH(); addEventListener("scroll",setH,{passive:true});
+  /* ---------- Header Scrolled State ---------- */
+  const header = $(".site-header");
+  const fabTop = $("#fabTop");
+
+  window.addEventListener("scroll", () => {
+    if (header) {
+      header.classList.toggle("scrolled", window.scrollY > 12);
+    }
+    if (fabTop) {
+      fabTop.style.display = window.scrollY > 600 ? "grid" : "none";
+    }
+  }, { passive: true });
+
+  /* ---------- Mobile Navigation Drawer ---------- */
+  const drawer = $("#drawer");
+  const burger = $("[data-open-drawer]");
+  const drawerCloseButtons = $$("[data-close-drawer]");
+
+  function openDrawer() {
+    if (!drawer) return;
+    drawer.classList.add("open");
+    document.body.style.overflow = "hidden";
+    if (burger) burger.setAttribute("aria-expanded", "true");
+    const firstLink = $("a, button", drawer);
+    if (firstLink) firstLink.focus();
   }
 
-  /* active nav */
-  const page=(location.pathname.split("/").pop()||"index.html").toLowerCase();
-  $$(".nav-links a, .drawer-panel a.dlink").forEach(a=>{
-    const h=(a.getAttribute("href")||"").toLowerCase();
-    if(h===page||(page===""&&h==="index.html")) a.classList.add("active");
-  });
-
-  /* ---------- reveal on scroll ---------- */
-  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target);}}),{threshold:.12});
-  $$(".reveal").forEach(el=>io.observe(el));
-
-  /* ---------- hero slideshow ---------- */
-  const slides=$$(".hero-slides img"), dotsWrap=$("#heroDots");
-  // phones: portrait-framed crops of the same slides — motion kept, framing fixed
-  if(slides.length&&matchMedia("(max-width:560px)").matches){slides.forEach(im=>{im.src=im.src.replace("w=1800","w=1200&h=900");});}
-  if(slides.length){
-    let i=0;
-    slides[0].classList.add("on");
-    if(dotsWrap){slides.forEach((_,k)=>{const d=document.createElement("button");d.setAttribute("aria-label","Slide "+(k+1));if(!k)d.classList.add("on");d.addEventListener("click",()=>go(k));dotsWrap.appendChild(d);});}
-    const dots=dotsWrap?[...dotsWrap.children]:[];
-    function go(k){i=k;slides.forEach((s,j)=>s.classList.toggle("on",j===i));dots.forEach((d,j)=>d.classList.toggle("on",j===i));}
-    setInterval(()=>go((i+1)%slides.length),6000);
+  function closeDrawer() {
+    if (!drawer) return;
+    drawer.classList.remove("open");
+    document.body.style.overflow = "";
+    if (burger) {
+      burger.setAttribute("aria-expanded", "false");
+      burger.focus();
+    }
   }
 
-  /* ---------- back-to-top ---------- */
-  const fabTop=$("#fabTop");
-  if(fabTop) fabTop.addEventListener("click",e=>{e.preventDefault();scrollTo({top:0,behavior:"smooth"});});
+  if (burger) {
+    burger.setAttribute("aria-expanded", "false");
+    burger.addEventListener("click", openDrawer);
+  }
 
-  /* ---------- date inputs: no past dates ---------- */
-  const dateInput=$("#f-date");
-  if(dateInput) dateInput.min=new Date().toISOString().slice(0,10);
+  drawerCloseButtons.forEach(btn => btn.addEventListener("click", closeDrawer));
 
-  /* ---------- keyboard access for gallery + video cards ---------- */
-  $$(".g-item, .v-card").forEach(el=>{
-    el.setAttribute("tabindex","0");el.setAttribute("role","button");
-    el.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();el.click();}});
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && drawer && drawer.classList.contains("open")) {
+      closeDrawer();
+    }
   });
 
-  /* ---------- footer year ---------- */
-  const y=$("#year"); if(y) y.textContent=new Date().getFullYear();
+  /* ---------- Active Nav Links ---------- */
+  const currentPath = (location.pathname.split("/").pop() || "").toLowerCase();
+  $$(".nav-links a, .drawer-panel a.dlink").forEach(a => {
+    const href = (a.getAttribute("href") || "").toLowerCase().replace(/^\//, "");
+    if (href === currentPath || (currentPath === "" && (href === "index.html" || href === ""))) {
+      a.classList.add("active");
+    }
+  });
+
+  /* ---------- Scroll Reveal (IntersectionObserver) ---------- */
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("in");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    $$(".reveal").forEach(el => observer.observe(el));
+  } else {
+    $$(".reveal").forEach(el => el.classList.add("in"));
+  }
+
+  /* ---------- Hero Video Reel Switcher (index.html) ---------- */
+  const heroVideo = $("#heroVideo");
+  const heroReelBtns = $$(".hero-reel-btn");
+
+  if (heroVideo && heroReelBtns.length) {
+    heroReelBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        heroReelBtns.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        const nextSrc = btn.dataset.src;
+        const nextPoster = btn.dataset.poster;
+
+        if (nextSrc && heroVideo.getAttribute("src") !== nextSrc) {
+          heroVideo.src = nextSrc;
+          if (nextPoster) heroVideo.poster = nextPoster;
+          heroVideo.load();
+          heroVideo.play().catch(() => {});
+        }
+      });
+    });
+  }
+
+  /* ---------- Back to Top Button ---------- */
+  if (fabTop) {
+    fabTop.addEventListener("click", (e) => {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
+  /* ---------- Minimum Date for Booking Forms ---------- */
+  const dateInput = $("#f-date");
+  if (dateInput) {
+    dateInput.min = new Date().toISOString().slice(0, 10);
+  }
+
+  /* ---------- Universal Lightbox (Homepage Rail + Gallery) ---------- */
+  const lightbox = $("#lightbox");
+  const lightboxItems = $$(".g-item");
+
+  if (lightbox && lightboxItems.length) {
+    const lbImg = $("#lbImg");
+    const lbCap = $("#lbCap");
+    let currentIndex = 0;
+
+    const visibleItems = () => lightboxItems.filter(item => item.style.display !== "none");
+
+    function displayLightboxImage(index) {
+      const items = visibleItems();
+      if (!items.length) return;
+      currentIndex = (index + items.length) % items.length;
+      const targetItem = items[currentIndex];
+      const img = $("img", targetItem);
+      const cap = $("figcaption", targetItem);
+
+      if (img && lbImg) {
+        lbImg.src = img.src;
+        lbImg.alt = img.alt || "Oasis setup preview";
+      }
+      if (lbCap) {
+        lbCap.textContent = cap ? cap.textContent : (img ? img.alt : "");
+      }
+    }
+
+    function openLightbox(item) {
+      lightbox.classList.add("open");
+      document.body.style.overflow = "hidden";
+      const index = visibleItems().indexOf(item);
+      displayLightboxImage(index >= 0 ? index : 0);
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove("open");
+      document.body.style.overflow = "";
+    }
+
+    lightboxItems.forEach(item => {
+      item.setAttribute("tabindex", "0");
+      item.setAttribute("role", "button");
+      item.setAttribute("aria-label", "View larger image");
+
+      item.addEventListener("click", () => openLightbox(item));
+      item.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          openLightbox(item);
+        }
+      });
+    });
+
+    const closeBtn = $("[data-lb-close]", lightbox);
+    if (closeBtn) closeBtn.addEventListener("click", closeLightbox);
+
+    const prevBtn = $(".lb-prev", lightbox);
+    if (prevBtn) {
+      prevBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        displayLightboxImage(currentIndex - 1);
+      });
+    }
+
+    const nextBtn = $(".lb-next", lightbox);
+    if (nextBtn) {
+      nextBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        displayLightboxImage(currentIndex + 1);
+      });
+    }
+
+    lightbox.addEventListener("click", (e) => {
+      if (e.target === lightbox) closeLightbox();
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (!lightbox.classList.contains("open")) return;
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowRight") displayLightboxImage(currentIndex + 1);
+      if (e.key === "ArrowLeft") displayLightboxImage(currentIndex - 1);
+    });
+  }
+
+  /* ---------- Gallery Filtering (gallery.html) ---------- */
+  const galleryFilterButtons = $$("[data-gfilter]");
+  if (galleryFilterButtons.length) {
+    galleryFilterButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        galleryFilterButtons.forEach(b => b.classList.remove("on"));
+        btn.classList.add("on");
+        const category = btn.dataset.gfilter;
+        $$(".g-grid .g-item").forEach(item => {
+          const match = category === "all" || item.dataset.cat === category;
+          item.style.display = match ? "" : "none";
+        });
+      });
+    });
+  }
+
+  /* ---------- Gallery Video Playback (Single Play Guard) ---------- */
+  const galleryVideos = $$(".film-card video");
+  if (galleryVideos.length) {
+    galleryVideos.forEach(video => {
+      video.addEventListener("play", () => {
+        galleryVideos.forEach(other => {
+          if (other !== video && !other.paused) {
+            other.pause();
+          }
+        });
+      });
+    });
+  }
+
+  /* ---------- Accessible FAQ Accordion ---------- */
+  const faqItems = $$(".faq-item");
+  faqItems.forEach(item => {
+    const questionBtn = $(".faq-q", item);
+    if (!questionBtn) return;
+
+    questionBtn.setAttribute("aria-expanded", "false");
+
+    questionBtn.addEventListener("click", () => {
+      const isOpen = item.classList.contains("open");
+
+      // Accordion mode: collapse others
+      faqItems.forEach(other => {
+        other.classList.remove("open");
+        const otherBtn = $(".faq-q", other);
+        if (otherBtn) otherBtn.setAttribute("aria-expanded", "false");
+      });
+
+      if (!isOpen) {
+        item.classList.add("open");
+        questionBtn.setAttribute("aria-expanded", "true");
+      }
+    });
+  });
 
   /* ============================================================
-     FULL OASIS MENU (source of truth from business brief)
-  ============================================================ */
-  const MENU=[
-    ["Rice","From the deg & the dum",["Chicken Biryani","Mutton Biryani","Sindhi Biryani","Delhi Biryani","Hyderabadi Biryani","Chicken Pulao","Vegetable Pulao","Mutton Pulao","Brown Rice","Afghani Pulao","Peas Pulao","Buttered Rice","Fried Rice","Tehri Pulao"]],
-    ["Pakistani Selection","Desi heritage favourites",["Chicken Qorma","Mutton Qorma","Mutton Ginger","Mutton Khara Masala","Mutton Qeema","Qeema Gurday","Chicken Dahiwala","Chicken Karahi","Qeema Makhanay","Mutton Dahiwala","Mutton Karahi Palak","Mutton Karahi","Palak Maghaz","Chicken Ginger","Chicken Khara Masala"]],
-    ["Chicken Specialties","Crowd-pleasers, wedding style",["Sajji Roast","Chargha Roast","Chicken Shawarma","Chicken Kiev","Crispy Broast Chicken","Steamed Chicken Roast","Chicken Chapli Kabab","Creamy Handi Chicken","Chicken Kofta Curry","Chicken Stew","Ala King Chicken","Whole Spice Chicken","Chili Chicken Toss","Chicken Mushroom Bake","Herb Chicken Curry","Foil Chicken Roast","Cheesy Chicken Fingers","Chicken Cordon Bleu","Butter Cream Chicken","Dynamite Chicken Bites","Balochi Chicken Tikka","Ottoman Turkish Kabab"]],
-    ["Mutton Specialties","Slow, rich & celebratory",["Whole Stuffed Lamb","Mutton Roast","Foil Mutton Roast","Multani Kunna","Tawa Khata Khat","Whole Spice Mutton","Creamy Handi Mutton","Makhani Mutton","Achari Gosht","Do Piyaza Mutton","Palak Mutton","Mutton Paya","Mutton Joint Roast","Surf & Turf (Mutton-Prawn)"]],
-    ["Beef Selections","Deep flavour, generous cuts",["Mughlai Gola Kabab","Beef Seekh Kabab","Behari Strip Kabab","Beef Chapli Kabab","Beef Shami Kabab","Beef Kofta Curry","Nargisi Kofta","Beef Shashlik","Beef Shawarma","Beef Stir-Fry","Bohri Beef Cutlets","Mughlai Beef Qorma","Tawa Beef Kabab","BBQ Beef Boti","Beef Nihari","Pasanda Beef Curry","Beef Lasagna","Beef Haleem"]],
-    ["Ocean Specials","Fresh from the water",["Prawn Sizzlers","Tempura Prawns","Fish Tempura","Fish Cakes","Crumb Fried Fish","Fish Orly","Whole Pomfret","Fish Cheese Crispers","Fish Karahi","Tawa Surmai","Dynamite Prawns","BBQ Crab","Shrimp Curry"]],
-    ["Barbecue","Live fire & smoke",["Chicken Tikka","Kidney / Liver","Ribs","Chicken Shashlyk","Seekh Kebab","Prawns","Chicken Boti","Bihari Kebab","Fish Tikka","Mutton Boti","Gola Kebab","Hot Dogs","Lamb Chops","T-Bone Steak"]],
-    ["Vegetables","Garden-fresh & desi",["Vegetable Bhujia","Palak Paneer","Aloo Achari","Mirchay Ka Salan","Baghary Baingan","Vegetables Sautee","Khata Tamatar","Aloo Methi","Potato Bhujia with Puri","Mixed Vegetable Medley","Veggie Cutlets","Veg Spring Rolls","Palak Aloo","Vegetable Biryani","Tadka Dal","Bhindi Crisp","Aloo Matar","Masala Dosa","Malai Kofta","Mushroom Karahi","Paneer Skewers","Paneer Karahi","Sarson Saag & Makki Roti"]],
-    ["Soups","To open the appetite",["Chicken Corn Soup","Cream of Chicken","Hot & Sour Soup","Thai Coconut Soup","Cream of Mushroom","Roasted Tomato Soup","Masala Lentil Soup","Chicken Consommé","Spanish Gazpacho"]],
-    ["Exotic Additions","Crisp, sizzling & special",["Finger Fish","Lahori Fried Fish","Tempura","Fried Prawns","Haleem","Dahi Baray","Chicken Lollipops","Chicken Nuggets","Chicken Croquettes","Chicken Wontons","Sizzling Tawa Chicken"]],
-    ["Snacks / Hi-Tea","Evening tables & tea-time",["Alfredo Pasta","Tea Sandwiches","Chicken Puff","Vol-au-Vent","Pizza Bites","Chicken Samosa","Mince Samosa","Cheese Samosa","Veg Samosa","Spring Rolls","Fish Fingers","French Fries","Dahi Phulki","Chana Chaat","Mini Sliders","Tea Cake","Marble Cake","Fruit Loaf","Cookie Medley","Pastry Assortment","Pani Puri (Live)","Chicken Wings","Zesty Drumsticks","Chicken Cheese Bites"]],
-    ["Salads","Fresh & bright",["Russian Salad","Egg & Potato Salad","Macaroni Salad","Beet Root & Potato Salad","Cole Slaw","Kidney Beans Salad","Katchumar Salad","Fresh Green Salad","Beet Root Salad"]],
-    ["Desserts","A sweet farewell",["Ice Cream","Jalebi","Cheese Cake","Apricot with Cream","Fruite Trifle","Gulab Jaman","Halwa Gajar","Firni","Ras Malai","Halwa Akhrot","Kheer","Shahi Tukra","Halwa Loki","Kulfi Falooda","Caramel Custard","Halwa Petha","Suji Delight","Lauki Delight","Mughlai Bread Pudding","Saffron Rice","Royal Motanjan","Lab-e-Sheeren","Doodh Dulari","Swiss Rolls","British Pudding"]],
-    ["Hot Beverages","Served steaming",["Tea","Coffee","Green Tea","Kashmiri Tea"]],
-    ["Cold Drinks / Refreshments","Cool & celebratory",["Iced Tea","Iced Mocha","Fruit Smoothies","Mint Cooler","Pina Colada","Fruit Mocktails","Fruit Slushes","Fresh Juices","Rose Milk","Falooda Shake"]],
-    ["Newly Added Selections","Fresh from the Oasis kitchen",["Desi Potato Bhujia with Puri","Malai Kofta Curry","Chocolate Mousse","Fresh Lime Soda","Chicken Shawarma Wrap","Grilled Fish with Lemon Butter","Rasmalai Cheesecake","Virgin Mojito","Royal Mutton Kunna","Beef Seekh Rolls","Mango Delight","Mint Margarita","Vegetable Spring Rolls","Chicken Tikka Pizza","Saffron Phirni","Golap Jamun Brownie","Peshawari Chapli Kebab","Nihari (Beef / Mutton)","Gulab Jamun Brownie","Blue Lagoon Mocktail"]]
+     FULL OASIS MENU DATA REPOSITORY
+     ============================================================ */
+  const MENU = [
+    ["Rice & Pulao", "From the deg & the dum", [
+      "Chicken Biryani", "Mutton Biryani", "Sindhi Biryani", "Delhi Biryani",
+      "Hyderabadi Biryani", "Chicken Pulao", "Vegetable Pulao", "Mutton Pulao",
+      "Brown Rice", "Afghani Pulao", "Peas Pulao", "Buttered Rice", "Fried Rice",
+      "Tehri Pulao", "Royal Prawn Biryani", "Sweet Kashmiri Pulao"
+    ]],
+    ["Pakistani Selection", "Desi heritage favourites", [
+      "Chicken Qorma", "Mutton Qorma", "Mutton Ginger", "Mutton Khara Masala",
+      "Mutton Qeema", "Qeema Gurday", "Chicken Dahiwala", "Chicken Karahi",
+      "Qeema Makhanay", "Mutton Dahiwala", "Mutton Karahi Palak", "Mutton Karahi",
+      "Palak Maghaz", "Chicken Ginger", "Chicken Khara Masala"
+    ]],
+    ["Chicken Specialties", "Crowd-pleasers, wedding style", [
+      "Sajji Roast", "Chargha Roast", "Chicken Shawarma", "Chicken Kiev",
+      "Crispy Broast Chicken", "Steamed Chicken Roast", "Chicken Chapli Kabab",
+      "Creamy Handi Chicken", "Chicken Kofta Curry", "Chicken Stew",
+      "Ala King Chicken", "Whole Spice Chicken", "Chili Chicken Toss",
+      "Chicken Mushroom Bake", "Herb Chicken Curry", "Foil Chicken Roast",
+      "Cheesy Chicken Fingers", "Chicken Cordon Bleu", "Butter Cream Chicken",
+      "Dynamite Chicken Bites", "Balochi Chicken Tikka", "Ottoman Turkish Kabab"
+    ]],
+    ["Mutton Specialties", "Slow, rich & celebratory", [
+      "Whole Stuffed Lamb", "Mutton Roast", "Foil Mutton Roast", "Multani Kunna",
+      "Tawa Khata Khat", "Whole Spice Mutton", "Creamy Handi Mutton", "Makhani Mutton",
+      "Achari Gosht", "Do Piyaza Mutton", "Palak Mutton", "Mutton Paya",
+      "Mutton Joint Roast", "Surf & Turf (Mutton-Prawn)", "Mutton Raan (Upon Request)"
+    ]],
+    ["Beef Selections", "Deep flavour, generous cuts", [
+      "Mughlai Gola Kabab", "Beef Seekh Kabab", "Behari Strip Kabab", "Beef Chapli Kabab",
+      "Beef Shami Kabab", "Beef Kofta Curry", "Nargisi Kofta", "Beef Shashlik",
+      "Beef Shawarma", "Beef Stir-Fry", "Bohri Beef Cutlets", "Mughlai Beef Qorma",
+      "Tawa Beef Kabab", "BBQ Beef Boti", "Beef Nihari", "Pasanda Beef Curry",
+      "Beef Lasagna", "Beef Haleem"
+    ]],
+    ["Ocean Specials", "Fresh seafood & sizzlers", [
+      "Prawn Sizzlers", "Tempura Prawns", "Fish Tempura", "Fish Cakes",
+      "Crumb Fried Fish", "Fish Orly", "Whole Pomfret", "Fish Cheese Crispers",
+      "Fish Karahi", "Tawa Surmai", "Dynamite Prawns", "BBQ Crab", "Shrimp Curry"
+    ]],
+    ["Barbecue", "Live fire & smoke", [
+      "Chicken Tikka", "Kidney / Liver", "Ribs", "Chicken Shashlyk",
+      "Seekh Kebab", "Prawns", "Chicken Boti", "Bihari Kebab",
+      "Fish Tikka", "Mutton Boti", "Gola Kebab", "Hot Dogs", "Lamb Chops", "T-Bone Steak"
+    ]],
+    ["Vegetables & Daal", "Garden-fresh & desi", [
+      "Vegetable Bhujia", "Palak Paneer", "Aloo Achari", "Mirchay Ka Salan",
+      "Baghary Baingan", "Vegetables Sautee", "Khata Tamatar", "Aloo Methi",
+      "Potato Bhujia with Puri", "Mixed Vegetable Medley", "Veggie Cutlets",
+      "Veg Spring Rolls", "Palak Aloo", "Vegetable Biryani", "Tadka Dal",
+      "Daal Mash", "Daal Chana", "Bhindi Masala (Seasonal)", "Malai Kofta",
+      "Paneer Skewers", "Paneer Karahi", "Sarson Saag & Makki Roti"
+    ]],
+    ["Soups", "To open the appetite", [
+      "Chicken Corn Soup", "Cream of Chicken", "Hot & Sour Soup", "Thai Coconut Soup",
+      "Cream of Mushroom", "Roasted Tomato Soup", "Masala Lentil Soup",
+      "Chicken Consommé", "Spanish Gazpacho"
+    ]],
+    ["Exotic Additions", "Crisp, sizzling & special", [
+      "Finger Fish", "Lahori Fried Fish", "Tempura", "Fried Prawns", "Haleem",
+      "Dahi Baray", "Chicken Lollipops", "Chicken Nuggets", "Chicken Croquettes",
+      "Chicken Wontons", "Sizzling Tawa Chicken"
+    ]],
+    ["Snacks & Hi-Tea", "Evening tables & tea-time", [
+      "Alfredo Pasta", "Tea Sandwiches", "Chicken Puff", "Vol-au-Vent",
+      "Pizza Bites", "Chicken Samosa", "Mince Samosa", "Cheese Samosa",
+      "Veg Samosa", "Spring Rolls", "Fish Fingers", "French Fries",
+      "Dahi Phulki", "Chana Chaat", "Mini Sliders", "Tea Cake",
+      "Marble Cake", "Fruit Loaf", "Cookie Medley", "Pastry Assortment",
+      "Pani Puri (Live)", "Chicken Wings", "Zesty Drumsticks", "Chicken Cheese Bites"
+    ]],
+    ["Salads & Raita", "Fresh & bright", [
+      "Fresh Green Salad", "Kachumar Salad", "Russian Salad", "Macaroni Salad",
+      "Beet Root Salad", "Mint Raita", "Egg & Potato Salad", "Cole Slaw", "Kidney Beans Salad"
+    ]],
+    ["Desserts", "A sweet farewell", [
+      "Kheer", "Gulab Jaman", "Ras Malai", "Firni", "Chocolate Mousse",
+      "Fruit Trifle", "Ice Cream", "Jalebi", "Cheese Cake", "Apricot with Cream",
+      "Halwa Gajar", "Halwa Akhrot", "Shahi Tukra", "Kulfi Falooda",
+      "Caramel Custard", "Saffron Phirni", "Golap Jamun Brownie", "Doodh Dulari", "Royal Motanjan"
+    ]],
+    ["Hot Beverages", "Served steaming", [
+      "Tea", "Green Tea", "Kashmiri Tea", "Coffee"
+    ]],
+    ["Cold Drinks & Refreshments", "Cool & celebratory", [
+      "Fresh Lime Soda", "Mint Margarita", "Virgin Mojito", "Pina Colada",
+      "Blue Lagoon Mocktail", "Fruit Smoothies", "Fresh Juices", "Falooda Shake"
+    ]]
   ];
 
-  /* shortlist (stored locally, attached to quote request) */
-  const KEY="oasis_shortlist_v1";
-  const getList=()=>{try{return JSON.parse(localStorage.getItem(KEY))||[]}catch{return[]}};
-  const setList=l=>{try{localStorage.setItem(KEY,JSON.stringify(l))}catch{}};
-  let shortlist=getList();
-  function syncShortlistUI(){
-    $$("#shortCount").forEach(el=>el.textContent=shortlist.length);
-    const box=$("#shortBox"); if(!box) return;
-    box.innerHTML = shortlist.length
-      ? shortlist.map(x=>`<span class="pill">${x} <button data-rm="${x}" aria-label="remove" style="border:none;background:none;cursor:pointer;color:var(--maroon)">×</button></span>`).join("")
-      : `<p class="form-note">Tap “+ Add” on any dish to build your enquiry list. It travels with you to the quote page.</p>`;
-    $$("#shortBox [data-rm]").forEach(b=>b.addEventListener("click",()=>{shortlist=shortlist.filter(v=>v!==b.dataset.rm);setList(shortlist);syncShortlistUI();paintAdds();}));
-  }
-  function paintAdds(){$$("[data-add]").forEach(b=>{const on=shortlist.includes(b.dataset.add);b.classList.toggle("added",on);b.textContent=on?"✓ Added":"+ Add";});}
-  function toggleAdd(name){shortlist.includes(name)?shortlist=shortlist.filter(v=>v!==name):shortlist.push(name);setList(shortlist);syncShortlistUI();paintAdds();}
+  /* ---------- Shortlist Storage & Operations ---------- */
+  const STORAGE_KEY = "oasis_shortlist_v1";
 
-  /* ---------- render full menu page ---------- */
-  const menuRoot=$("#menuRoot"), catNav=$("#catNav");
-  if(menuRoot){
-    const q=$("#menuSearch"), sel=$("#menuFilter");
-    // build category pills + select (All selected by default = full menu)
-    if(catNav){const all=document.createElement("button");all.className="cat on";all.textContent="All";all.dataset.cat="";all.addEventListener("click",()=>{catNav.querySelectorAll(".cat").forEach(x=>x.classList.remove("on"));all.classList.add("on");if(sel)sel.value="";render();});catNav.appendChild(all);}
-    MENU.forEach(([c])=>{
-      if(catNav){const b=document.createElement("button");b.className="cat";b.textContent=c;b.dataset.cat=c;b.addEventListener("click",()=>{catNav.querySelectorAll(".cat").forEach(x=>x.classList.remove("on"));b.classList.add("on");if(sel)sel.value=c;render();menuRoot.scrollIntoView({behavior:"smooth",block:"start"});});catNav.appendChild(b);}
-      if(sel){const o=document.createElement("option");o.value=c;o.textContent=c;sel.appendChild(o);}
-    });
-    if(sel) sel.insertAdjacentHTML("afterbegin",`<option value="">All categories</option>`);
-    function resetMenuFilters(){if(q)q.value="";if(sel)sel.value="";if(catNav)catNav.querySelectorAll(".cat").forEach(x=>x.classList.toggle("on",x.dataset.cat===""));}
-    function render(){
-      const term=(q&&q.value||"").trim().toLowerCase();
-      const active=catNav?((catNav.querySelector(".cat.on")||{}).dataset||{}).cat:"";
-      const only=sel&&sel.value?sel.value:active;
-      let total=0;
-      menuRoot.innerHTML=MENU.map((m,k)=>[m,k]).filter(([[c]])=>!only||c===only).map(([[c,sub,items],k])=>{
-        const hit=items.filter(n=>!term||n.toLowerCase().includes(term));
-        if(term&&!hit.length) return "";
-        total+=hit.length;
-        return `<div class="menu-block" id="cat-${c.replace(/[^a-z]+/gi,"-")}">
-          <div class="kicker-row"><div><span class="eyebrow">${String(k+1).padStart(2,"0")} · ${sub}</span><h2 class="h2">${c}</h2></div>
-          <span class="pill">${hit.length} item${hit.length===1?"":"s"}</span></div>
-          <div class="menu-grid">${hit.map(n=>`<div class="menu-item"><div><b>${n}</b><small>${c}</small></div><button class="add" data-add="${n}">+ Add</button></div>`).join("")}</div>
-        </div>`;
-      }).join("")||`<div class="form-card center"><h3 style="font-family:var(--font-display);color:var(--maroon)">No dishes match “${esc(q.value)}”.</h3><p class="form-note">Try a shorter word — e.g. “karahi”, “kebab”, “biryani” — or browse a category.</p><p class="mt"><button class="btn btn-outline btn-sm" id="clearSearch">Clear search ✕</button></p></div>`;
-      const cnt=$("#menuCount"); if(cnt) cnt.textContent=term||only?`${total} dish${total===1?"":"es"} shown`:`${MENU.reduce((a,[,,i])=>a+i.length,0)} dishes · ${MENU.length} categories`;
-      const cs=$("#clearSearch"); if(cs) cs.addEventListener("click",()=>{resetMenuFilters();render();});
-      $$("#menuRoot [data-add]").forEach(b=>b.addEventListener("click",()=>toggleAdd(b.dataset.add)));
-      paintAdds();
+  function getShortlist() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    } catch {
+      return [];
     }
-    if(q) q.addEventListener("input",render);
-    if(sel) sel.addEventListener("change",()=>{if(catNav)catNav.querySelectorAll(".cat").forEach(x=>x.classList.toggle("on",x.dataset.cat===sel.value));render();});
-    render();
-  }
-  syncShortlistUI(); paintAdds();
-  // prefill quote "catering requirements" from shortlist
-  const req=$("#f-req");
-  if(req&&!req.value&&shortlist.length) req.value="Dishes we liked: "+shortlist.join(", ")+"\n\n";
-
-  /* ---------- gallery filter + lightbox ---------- */
-  const gItems=$$(".g-item");
-  $$("[data-gfilter]").forEach(b=>b.addEventListener("click",()=>{
-    $$("[data-gfilter]").forEach(x=>x.classList.remove("on"));b.classList.add("on");
-    const f=b.dataset.gfilter;
-    gItems.forEach(g=>g.style.display=(f==="all"||g.dataset.cat===f)?"":"none");
-  }));
-  const lb=$("#lightbox");
-  if(lb&&gItems.length){
-    const img=$("#lbImg"),cap=$("#lbCap");let idx=0;
-    const vis=()=>gItems.filter(g=>g.style.display!=="none");
-    function show(k){const v=vis();idx=(k+v.length)%v.length;const im=$("img",v[idx]);img.src=im.src;img.alt=im.alt;cap.textContent=im.alt;}
-    gItems.forEach(g=>g.addEventListener("click",()=>{lb.classList.add("open");document.body.style.overflow="hidden";show(vis().indexOf(g));}));
-    $("[data-lb-close]",lb).addEventListener("click",close);
-    $(".lb-prev",lb).addEventListener("click",e=>{e.stopPropagation();show(idx-1);});
-    $(".lb-next",lb).addEventListener("click",e=>{e.stopPropagation();show(idx+1);});
-    lb.addEventListener("click",e=>{if(e.target===lb)close();});
-    addEventListener("keydown",e=>{if(!lb.classList.contains("open"))return;if(e.key==="Escape")close();if(e.key==="ArrowRight")show(idx+1);if(e.key==="ArrowLeft")show(idx-1);});
-    function close(){lb.classList.remove("open");document.body.style.overflow="";}
   }
 
-  /* ---------- FAQ ---------- */
-  $$(".faq-item").forEach(it=>{
-    $(".faq-q",it).addEventListener("click",()=>{
-      const open=it.classList.contains("open");
-      $$(".faq-item.open").forEach(o=>{o.classList.remove("open");$(".pm",o).textContent="+";});
-      if(!open){it.classList.add("open");$(".pm",it).textContent="–";}
+  function saveShortlist(list) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    } catch {}
+  }
+
+  let shortlist = getShortlist();
+
+  function syncShortlistUI() {
+    $$("#shortCount, .short-badge").forEach(el => {
+      el.textContent = shortlist.length;
     });
-  });
 
-  function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+    const box = $("#shortBox");
+    if (box) {
+      if (shortlist.length) {
+        box.innerHTML = shortlist.map(item => `
+          <span class="pill">
+            ${escapeHTML(item)}
+            <button data-rm="${escapeHTML(item)}" aria-label="Remove ${escapeHTML(item)}" style="border:none;background:none;cursor:pointer;color:var(--maroon);font-weight:700;margin-left:0.3rem">✕</button>
+          </span>
+        `).join("");
 
-  /* ---------- video modal ---------- */
-  const vm=$("#videoModal");
-  if(vm){
-    const frame=$("#videoFrame"),cap=$("#videoCap");
-    function filmFallback(poster){
-      frame.innerHTML=`<div style="display:grid;place-items:center;text-align:center;padding:3rem 1.5rem;background:radial-gradient(100% 120% at 50% 0%,#5c0e1a,#26060c);aspect-ratio:16/9">`
-        +`<div><p class="crumbs" style="color:var(--gold-2)">Coming soon to this player</p>`
-        +`<h3 style="font-family:var(--font-display);color:#fff;font-size:1.5rem;margin:.5rem 0">Watch this film on Instagram</h3>`
-        +`<p style="color:#e5cfa8;font-size:.92rem">Our freshest event reels post to Instagram first.</p>`
-        +`<a class="btn btn-gold btn-sm" style="margin-top:1rem" href="https://instagram.com/oasiscatering.pk" target="_blank" rel="noopener">Open @oasiscatering.pk →</a></div></div>`;
-    }
-    $$("[data-video]").forEach(c=>c.addEventListener("click",()=>{
-      const src=c.dataset.video, kind=c.dataset.kind||"mp4", title=c.dataset.title||"Oasis film";
-      cap.textContent=title;
-      if(kind==="youtube"){
-        frame.innerHTML=`<iframe src="${src}" title="${esc(title)}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
-      }else{
-        frame.innerHTML=`<video src="${src}" controls autoplay playsinline poster="${$("img",c)?$("img",c).src:""}"></video>`;
-        const v=$("video",frame);
-        if(v) v.addEventListener("error",()=>filmFallback(),{once:true});
+        $$("[data-rm]", box).forEach(btn => {
+          btn.addEventListener("click", () => {
+            const item = btn.dataset.rm;
+            shortlist = shortlist.filter(x => x !== item);
+            saveShortlist(shortlist);
+            syncShortlistUI();
+            updateAddButtons();
+          });
+        });
+      } else {
+        box.innerHTML = `<p class="form-note">Tap “+ Add” on any dish to build your enquiry list. Your shortlisted dishes travel with you to the quote form.</p>`;
       }
-      vm.classList.add("open");document.body.style.overflow="hidden";
-    }));
-    $("[data-vm-close]",vm).addEventListener("click",closeV);
-    vm.addEventListener("click",e=>{if(e.target===vm)closeV();});
-    addEventListener("keydown",e=>{if(e.key==="Escape")closeV();});
-    function closeV(){vm.classList.remove("open");frame.innerHTML="";document.body.style.overflow="";}
+    }
+
+    // Floating Shortlist Dock on menu page
+    const floatBar = $("#shortlistFloat");
+    if (floatBar) {
+      floatBar.style.display = shortlist.length ? "flex" : "none";
+    }
   }
 
-  /* ---------- quote + contact forms (no account, no backend) ---------- */
-  const WA="923295977659"; // Waqar Ahmed WhatsApp
-  function collectQuote(form){
-    const v=id=>((form.querySelector("#"+id)||{}).value||"").trim();
-    const services=$$('input[name="services"]:checked',form).map(c=>c.value);
-    return {name:v("f-name"),phone:v("f-phone"),email:v("f-email"),type:v("f-type"),date:v("f-date"),
-      guests:v("f-guests"),loc:v("f-loc"),services,req:v("f-req"),details:v("f-details")};
-  }
-  function quoteText(d){
-    return `Assalam-o-Alaikum Oasis! I would like a quotation.%0A%0A`+
-    `Name: ${encodeURIComponent(d.name)}%0APhone: ${encodeURIComponent(d.phone)}%0A`+
-    (d.email?`Email: ${encodeURIComponent(d.email)}%0A`:"")+
-    (d.type?`Event type: ${encodeURIComponent(d.type)}%0A`:"")+
-    (d.date?`Event date: ${encodeURIComponent(d.date)}%0A`:"")+
-    (d.guests?`Guests: ${encodeURIComponent(d.guests)}%0A`:"")+
-    (d.loc?`Venue / location: ${encodeURIComponent(d.loc)}%0A`:"")+
-    (d.services.length?`Services: ${encodeURIComponent(d.services.join(", "))}%0A`:"")+
-    (d.req?`Catering: ${encodeURIComponent(d.req)}%0A`:"")+
-    (d.details?`Details: ${encodeURIComponent(d.details)}`:"");
-  }
-  const qf=$("#quoteForm");
-  if(qf){
-    qf.addEventListener("submit",e=>{
-      e.preventDefault();
-      const d=collectQuote(qf);
-      if(!d.name||!d.phone){flash("Please add your name and phone number so we can call you back.");return;}
-      const msg=decodeURIComponent(quoteText(d)).replace(/%0A/g,"\n");
-      const box=$("#quoteDone");
-      if(box){box.classList.add("show");box.innerHTML=`<b style="font-family:var(--font-display);font-size:1.2rem;color:#fff">Shukriya, ${esc(d.name.split(" ")[0])} — your enquiry is ready.</b><p style="margin:.5rem 0 1rem">Choose how to send it. No account needed.</p><div style="display:flex;gap:.6rem;flex-wrap:wrap"><a class="btn btn-gold btn-sm" target="_blank" rel="noopener" href="https://wa.me/${WA}?text=${quoteText(d)}"><img src="assets/images/icons/whatsapp-maroon.svg" alt=""> Send via WhatsApp</a><a class="btn btn-ghost btn-sm" href="mailto:oasiscatering.pk@gmail.com?subject=${encodeURIComponent("Quotation request — "+d.name)}&body=${encodeURIComponent(msg)}">Send via Email</a></div>`;box.scrollIntoView({behavior:"smooth"});}
-      try{localStorage.removeItem(KEY);}catch{}
+  function updateAddButtons() {
+    $$("[data-add]").forEach(btn => {
+      const dish = btn.dataset.add;
+      const isSelected = shortlist.includes(dish);
+      btn.classList.toggle("added", isSelected);
+      btn.textContent = isSelected ? "✓ Added" : "+ Add";
     });
-  }
-  const cf=$("#contactForm");
-  if(cf){
-    cf.addEventListener("submit",e=>{
-      e.preventDefault();
-      const g=id=>((cf.querySelector("#"+id)||{}).value||"").trim();
-      const text=`Assalam-o-Alaikum Oasis!%0AName: ${encodeURIComponent(g("c-name"))}%0APhone: ${encodeURIComponent(g("c-phone"))}%0AMessage: ${encodeURIComponent(g("c-msg"))}`;
-      if(!g("c-name")||!g("c-phone")){flash("Please add your name and phone number.");return;}
-      open(`https://wa.me/${WA}?text=${text}`,"_blank");
-      flash("Opening WhatsApp — your message is ready to send. Or email us at oasiscatering.pk@gmail.com.");
-    });
-  }
-  function flash(msg){
-    let n=$("#flash");
-    if(!n){n=document.createElement("div");n.id="flash";n.style.cssText="position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#26060c;color:#f6e3c2;padding:.9rem 1.3rem;border-radius:14px;z-index:200;border:1px solid rgba(233,207,138,.4);box-shadow:0 20px 50px -12px rgba(0,0,0,.5);max-width:min(520px,92vw);text-align:center";document.body.appendChild(n);}
-    n.textContent=msg;n.style.display="block";clearTimeout(n._t);n._t=setTimeout(()=>n.style.display="none",4200);
   }
 
-  /* ---------- smooth anchor offset for sticky header ---------- */
-  $$('a[href^="#"]').forEach(a=>a.addEventListener("click",e=>{
-    let t=null; try{t=$(a.getAttribute("href"));}catch{/* invalid selector */}
-    if(!t||a.id==="fabTop") return;
-    e.preventDefault(); t.scrollIntoView({behavior:"smooth",block:"start"});
-  }));
+  function toggleDish(name) {
+    if (shortlist.includes(name)) {
+      shortlist = shortlist.filter(x => x !== name);
+    } else {
+      shortlist.push(name);
+    }
+    saveShortlist(shortlist);
+    syncShortlistUI();
+    updateAddButtons();
+  }
+
+  /* ---------- Render Menu Page (menu.html) ---------- */
+  const menuRoot = $("#menuRoot");
+  const catNav = $("#catNav");
+
+  if (menuRoot) {
+    const searchInput = $("#menuSearch");
+    const filterSelect = $("#menuFilter");
+
+    // Build Category Navigation Pills
+    if (catNav) {
+      const allBtn = document.createElement("button");
+      allBtn.className = "cat on";
+      allBtn.textContent = "All Categories";
+      allBtn.dataset.cat = "";
+      allBtn.addEventListener("click", () => {
+        $$(".cat", catNav).forEach(b => b.classList.remove("on"));
+        allBtn.classList.add("on");
+        if (filterSelect) filterSelect.value = "";
+        renderMenu();
+      });
+      catNav.appendChild(allBtn);
+
+      MENU.forEach(([catName]) => {
+        const btn = document.createElement("button");
+        btn.className = "cat";
+        btn.textContent = catName;
+        btn.dataset.cat = catName;
+        btn.addEventListener("click", () => {
+          $$(".cat", catNav).forEach(b => b.classList.remove("on"));
+          btn.classList.add("on");
+          if (filterSelect) filterSelect.value = catName;
+          renderMenu();
+          const targetSection = $(`#cat-${slugify(catName)}`);
+          if (targetSection) {
+            targetSection.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        });
+        catNav.appendChild(btn);
+
+        if (filterSelect) {
+          const opt = document.createElement("option");
+          opt.value = catName;
+          opt.textContent = catName;
+          filterSelect.appendChild(opt);
+        }
+      });
+
+      if (filterSelect) {
+        filterSelect.insertAdjacentHTML("afterbegin", `<option value="">All categories</option>`);
+      }
+    }
+
+    function renderMenu() {
+      const searchTerm = (searchInput && searchInput.value || "").trim().toLowerCase();
+      const activeCatBtn = catNav ? catNav.querySelector(".cat.on") : null;
+      const selectedCategory = filterSelect && filterSelect.value ? filterSelect.value : (activeCatBtn ? activeCatBtn.dataset.cat : "");
+
+      let totalMatchedDishes = 0;
+
+      const renderedHTML = MENU
+        .filter(([catName]) => !selectedCategory || catName === selectedCategory)
+        .map(([catName, subtitle, items], idx) => {
+          const matchedItems = items.filter(dish => !searchTerm || dish.toLowerCase().includes(searchTerm));
+          if (searchTerm && !matchedItems.length) return "";
+
+          totalMatchedDishes += matchedItems.length;
+
+          return `
+            <div class="menu-block" id="cat-${slugify(catName)}">
+              <div class="kicker-row" style="margin-bottom:1rem">
+                <div>
+                  <span class="eyebrow">${String(idx + 1).padStart(2, "0")} · ${escapeHTML(subtitle)}</span>
+                  <h2 class="h2">${escapeHTML(catName)}</h2>
+                </div>
+                <span class="pill">${matchedItems.length} dish${matchedItems.length === 1 ? "" : "es"}</span>
+              </div>
+              <div class="menu-grid">
+                ${matchedItems.map(dish => `
+                  <div class="menu-item">
+                    <div>
+                      <b>${escapeHTML(dish)}</b>
+                      <small>${escapeHTML(catName)}</small>
+                    </div>
+                    <button class="add" data-add="${escapeHTML(dish)}">+ Add</button>
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+          `;
+        })
+        .join("");
+
+      menuRoot.innerHTML = renderedHTML || `
+        <div class="form-card" style="text-align:center;padding:3rem 1.5rem">
+          <h3 style="font-family:var(--font-display);color:var(--maroon);font-size:1.5rem">No dishes match “${escapeHTML(searchInput.value)}”.</h3>
+          <p class="form-note" style="margin:0.8rem 0 1.2rem">Try searching a different item (e.g. “biryani”, “karahi”, “kebab”) or browse all categories.</p>
+          <button class="btn btn-outline btn-sm" id="clearMenuFilter">Reset Search & Filters ✕</button>
+        </div>
+      `;
+
+      const menuCountEl = $("#menuCount");
+      if (menuCountEl) {
+        menuCountEl.textContent = searchTerm || selectedCategory
+          ? `${totalMatchedDishes} dish${totalMatchedDishes === 1 ? "" : "es"} found`
+          : `250+ dishes across ${MENU.length} categories`;
+      }
+
+      const clearBtn = $("#clearMenuFilter");
+      if (clearBtn) {
+        clearBtn.addEventListener("click", () => {
+          if (searchInput) searchInput.value = "";
+          if (filterSelect) filterSelect.value = "";
+          if (catNav) {
+            $$(".cat", catNav).forEach(b => b.classList.toggle("on", b.dataset.cat === ""));
+          }
+          renderMenu();
+        });
+      }
+
+      $$("#menuRoot [data-add]").forEach(btn => {
+        btn.addEventListener("click", () => toggleDish(btn.dataset.add));
+      });
+
+      updateAddButtons();
+    }
+
+    if (searchInput) searchInput.addEventListener("input", renderMenu);
+    if (filterSelect) {
+      filterSelect.addEventListener("change", () => {
+        if (catNav) {
+          $$(".cat", catNav).forEach(b => b.classList.toggle("on", b.dataset.cat === filterSelect.value));
+        }
+        renderMenu();
+      });
+    }
+
+    renderMenu();
+  }
+
+  syncShortlistUI();
+  updateAddButtons();
+
+  /* ---------- Quote & Contact Form Handoff ---------- */
+  const WA_NUMBER = "923295977659"; // Waqar Ahmed (Primary Event Bookings)
+
+  // Auto-populate quote requirements field from shortlist
+  const quoteReqField = $("#f-req");
+  if (quoteReqField && !quoteReqField.value.trim() && shortlist.length) {
+    quoteReqField.value = "Selected dishes from Oasis menu:\n• " + shortlist.join("\n• ") + "\n\n";
+  }
+
+  function extractQuoteFormData(form) {
+    const val = id => ((form.querySelector("#" + id) || {}).value || "").trim();
+    const services = $$('input[name="services"]:checked', form).map(cb => cb.value);
+
+    return {
+      name: val("f-name"),
+      phone: val("f-phone"),
+      email: val("f-email"),
+      type: val("f-type"),
+      date: val("f-date"),
+      guests: val("f-guests"),
+      loc: val("f-loc"),
+      services,
+      req: val("f-req"),
+      details: val("f-details")
+    };
+  }
+
+  function formatQuoteMessage(d) {
+    let msg = `Assalam-o-Alaikum Oasis Team!\nI would like an event quotation.\n\n`;
+    msg += `• Name: ${d.name}\n`;
+    msg += `• Phone: ${d.phone}\n`;
+    if (d.email) msg += `• Email: ${d.email}\n`;
+    if (d.type) msg += `• Event Type: ${d.type}\n`;
+    if (d.date) msg += `• Event Date: ${d.date}\n`;
+    if (d.guests) msg += `• Expected Guests: ${d.guests}\n`;
+    if (d.loc) msg += `• Venue / Location: ${d.loc}\n`;
+    if (d.services.length) msg += `• Services: ${d.services.join(", ")}\n`;
+    if (d.req) msg += `\nCatering Requirements:\n${d.req}\n`;
+    if (d.details) msg += `\nAdditional Notes:\n${d.details}\n`;
+    return msg;
+  }
+
+  const quoteForm = $("#quoteForm");
+  if (quoteForm) {
+    quoteForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const data = extractQuoteFormData(quoteForm);
+
+      if (!data.name || !data.phone) {
+        showToast("Please provide your name and contact phone number.");
+        return;
+      }
+
+      const formattedText = formatQuoteMessage(data);
+      const encodedWaText = encodeURIComponent(formattedText);
+      const emailSubject = encodeURIComponent(`Quotation Request — ${data.name} (${data.type || "Event"})`);
+      const emailBody = encodeURIComponent(formattedText);
+
+      const doneBox = $("#quoteDone");
+      if (doneBox) {
+        doneBox.classList.add("show");
+        doneBox.innerHTML = `
+          <b style="font-family:var(--font-display);font-size:1.25rem;color:#ffffff;display:block">
+            Shukriya, ${escapeHTML(data.name.split(" ")[0])} — your event enquiry is ready!
+          </b>
+          <p style="margin:0.6rem 0 1.2rem;color:var(--cream-200);font-size:0.95rem">
+            Click below to send directly to our event team. We confirm dates and menus promptly.
+          </p>
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+            <a class="btn btn-gold btn-sm" href="https://wa.me/${WA_NUMBER}?text=${encodedWaText}" target="_blank" rel="noopener">
+              <img src="assets/images/icons/whatsapp-maroon.svg" alt="" style="width:18px;height:18px"> Send via WhatsApp
+            </a>
+            <a class="btn btn-ghost btn-sm" href="mailto:oasiscatering.pk@gmail.com?subject=${emailSubject}&body=${emailBody}">
+              <img src="assets/images/icons/email-white.svg" alt="" style="width:18px;height:18px"> Send via Email
+            </a>
+          </div>
+        `;
+        doneBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    });
+  }
+
+  /* ---------- Toast Notification ---------- */
+  function showToast(message) {
+    let toast = $("#siteToast");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "siteToast";
+      toast.style.cssText = "position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--maroon-950);color:var(--cream-100);padding:0.9rem 1.4rem;border-radius:var(--r-full);z-index:200;border:1px solid var(--gold);box-shadow:var(--shadow-lg);font-size:0.92rem;text-align:center;max-width:min(480px,90vw)";
+      document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.style.display = "block";
+    clearTimeout(toast._timeout);
+    toast._timeout = setTimeout(() => { toast.style.display = "none"; }, 4000);
+  }
+
+  /* ---------- Footer Current Year ---------- */
+  const yearEl = $("#year");
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+  /* ---------- Utilities ---------- */
+  function escapeHTML(str) {
+    return String(str).replace(/[&<>"']/g, char => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    }[char]));
+  }
+
+  function slugify(text) {
+    return text.toString().toLowerCase().trim().replace(/[\s\W-]+/g, "-");
+  }
+
 })();

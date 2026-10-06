@@ -3,21 +3,81 @@
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
         xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
   <url>
-    <loc>https://oasiscaterer.com/</loc><lastmod>2026-10-06</lastmod><changefreq>weekly</changefreq><priority>1.0</priority>
-    <image:image><image:loc>https://oasiscaterer.com/assets/images/setups/fairy-lawn.jpg</image:loc><image:title>Oasis fairy-light lawn wedding</image:title><image:caption>An Oasis evening setup glowing under fairy lights on a green lawn in Islamabad.</image:caption></image:image>
+    <loc>https://oasiscaterer.com/</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://oasiscaterer.com/assets/images/food/biryani.jpg</image:loc>
+      <image:title>Oasis Traditional Chicken &amp; Mutton Biryani Deg</image:title>
+      <image:caption>Authentic Pakistani long-grain basmati biryani cooked on slow wood dum with rich aromatic spices in Islamabad.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://oasiscaterer.com/assets/images/food/karahi.jpg</image:loc>
+      <image:title>Desi Ghee Chicken &amp; Shinwari Mutton Karahi</image:title>
+      <image:caption>Rich tomato gravy, julienne ginger and green chillies in a sizzling iron wok.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://oasiscaterer.com/assets/images/food/seekh-kebab.jpg</image:loc>
+      <image:title>Live Charcoal Seekh Kebabs</image:title>
+      <image:caption>Mince seekh kebabs grilled over open charcoal pits for live wedding counters.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://oasiscaterer.com/assets/images/setups/fairy-lawn.jpg</image:loc>
+      <image:title>Oasis Fairy-Light Wedding Lawn</image:title>
+      <image:caption>Evening banquet setup glowing under fairy lights on a green lawn in Islamabad.</image:caption>
+    </image:image>
   </url>
+
   <url>
-    <loc>https://oasiscaterer.com/menu.html</loc><lastmod>2026-10-06</lastmod><changefreq>weekly</changefreq><priority>0.9</priority>
+    <loc>https://oasiscaterer.com/about</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://oasiscaterer.com/assets/images/setups/wedding-hills.jpg</image:loc>
+      <image:title>Oasis Hilltop Wedding Banquet</image:title>
+      <image:caption>Three decades of authentic culinary heritage in Islamabad and Rawalpindi.</image:caption>
+    </image:image>
   </url>
+
   <url>
-    <loc>https://oasiscaterer.com/gallery.html</loc><lastmod>2026-10-06</lastmod><changefreq>weekly</changefreq><priority>0.9</priority>
-    <image:image><image:loc>https://oasiscaterer.com/assets/images/setups/wedding-hills.jpg</image:loc><image:title>Oasis hilltop wedding</image:title><image:caption>Hilltop wedding in a red theme with fairy lights by Oasis Catering.</image:caption></image:image>
-    <image:image><image:loc>https://oasiscaterer.com/assets/images/setups/marquee.jpg</image:loc><image:title>Oasis marquee and stage</image:title><image:caption>Marquee interior with crystal chandelier and stage setup.</image:caption></image:image>
-    <image:image><image:loc>https://oasiscaterer.com/assets/images/setups/fairy-lawn.jpg</image:loc><image:title>Oasis fairy-light lawn</image:title><image:caption>Outdoor dining glowing under a canopy of fairy lights.</image:caption></image:image>
-    <image:image><image:loc>https://oasiscaterer.com/assets/images/setups/rooftop.jpg</image:loc><image:title>Oasis rooftop event</image:title><image:caption>Rooftop corporate setup with stage and dressed tables.</image:caption></image:image>
-    <image:image><image:loc>https://oasiscaterer.com/assets/images/setups/birthday.jpg</image:loc><image:title>Oasis birthday table</image:title><image:caption>Candle-lit birthday dinner styling with florals.</image:caption></image:image>
-    <image:image><image:loc>https://oasiscaterer.com/assets/images/setups/umbrellas.jpg</image:loc><image:title>Oasis umbrella dining</image:title><image:caption>Night umbrella dining setup outdoors.</image:caption></image:image>
-    <image:image><image:loc>https://oasiscaterer.com/assets/images/setups/table-red.jpg</image:loc><image:title>Oasis black and red tablescape</image:title><image:caption>Black and red table styling with bows and glassware.</image:caption></image:image>
+    <loc>https://oasiscaterer.com/menu</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://oasiscaterer.com/assets/images/food/chargha-roast.jpg</image:loc>
+      <image:title>Lahori Steam Chargha &amp; Sajji Roast</image:title>
+      <image:caption>Marinated whole chicken steamed and roasted with traditional Punjabi spices.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://oasiscaterer.com/assets/images/food/malai-tikka.jpg</image:loc>
+      <image:title>Charcoal Smoked Chicken Malai Boti</image:title>
+      <image:caption>Tender boneless chicken marinated in cardamom, fresh cream and white pepper.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://oasiscaterer.com/assets/images/food/dessert-mithai.jpg</image:loc>
+      <image:title>Royal Shahi Kheer &amp; Gulab Jamun Spread</image:title>
+      <image:caption>Traditional desi sweets and saffron desserts for grand celebrations.</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://oasiscaterer.com/gallery</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://oasiscaterer.com/assets/images/setups/marquee.jpg</image:loc>
+      <image:title>Oasis Grand Marquee Interior</image:title>
+      <image:caption>Crystal chandeliers, dressed round tables and VIP stages in Islamabad.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://oasiscaterer.com/assets/images/setups/fairy-lawn.jpg</image:loc>
+      <image:title>Fairy Light Outdoor Dining</image:title>
+      <image:caption>Al fresco wedding banquet illuminated by fairy lights.</image:caption>
+    </image:image>
     <video:video>
       <video:thumbnail_loc>https://oasiscaterer.com/assets/images/setups/fairy-lawn.jpg</video:thumbnail_loc>
       <video:title>Oasis Event Reel 01 — Evening setup</video:title>
@@ -49,19 +109,30 @@
       <video:content_loc>https://oasiscaterer.com/assets/videos/reel-5.mp4</video:content_loc>
     </video:video>
   </url>
+
   <url>
-    <loc>https://oasiscaterer.com/contact.html</loc><lastmod>2026-10-06</lastmod><changefreq>monthly</changefreq><priority>0.9</priority>
-    <image:image><image:loc>https://oasiscaterer.com/assets/images/setups/umbrellas.jpg</image:loc><image:title>Oasis outdoor dining</image:title><image:caption>Umbrella dining setup by Oasis at night.</image:caption></image:image>
+    <loc>https://oasiscaterer.com/contact</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://oasiscaterer.com/assets/images/setups/umbrellas.jpg</image:loc>
+      <image:title>Oasis Outdoor Event Reception</image:title>
+      <image:caption>Direct contact and consultation for wedding and corporate bookings.</image:caption>
+    </image:image>
   </url>
+
   <url>
-    <loc>https://oasiscaterer.com/about.html</loc><lastmod>2026-10-06</lastmod><changefreq>monthly</changefreq><priority>0.7</priority>
-    <image:image><image:loc>https://oasiscaterer.com/assets/images/setups/wedding-hills.jpg</image:loc><image:title>Oasis hilltop wedding</image:title><image:caption>A signature Oasis wedding setup at dusk.</image:caption></image:image>
-    <image:image><image:loc>https://oasiscaterer.com/assets/images/setups/umbrellas.jpg</image:loc><image:title>Oasis outdoor dining</image:title><image:caption>Al fresco umbrella dining arranged by Oasis.</image:caption></image:image>
+    <loc>https://oasiscaterer.com/privacy</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
   </url>
+
   <url>
-    <loc>https://oasiscaterer.com/privacy.html</loc><lastmod>2026-10-06</lastmod><changefreq>yearly</changefreq><priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://oasiscaterer.com/terms.html</loc><lastmod>2026-10-06</lastmod><changefreq>yearly</changefreq><priority>0.3</priority>
+    <loc>https://oasiscaterer.com/terms</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
   </url>
 </urlset>
